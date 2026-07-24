@@ -1,23 +1,23 @@
 #!/usr/bin/python3
-"""
-    python script that exports data in the JSON format
-"""
-import json
+"""Gathers data from a REST API for a given employee's TODO list progress."""
 import requests
+import sys
+
 
 if __name__ == "__main__":
-    url = "https://jsonplaceholder.typicode.com/"
-    users = requests.get(url + "users").json()
-    """
-        export to JSON
-    """
+    employee_id = int(sys.argv[1])
+    base_url = "https://jsonplaceholder.typicode.com"
 
-    with open("todo_all_employees.json", "w") as jsonfile:
-        json.dump({
-            u.get("id"): [{
-                "task": t.get("title"),
-                "completed": t.get("completed"),
-                "username": u.get("username")
-            } for t in requests.get(url + "todos",
-                                    params={"userId": u.get("id")}).json()]
-            for u in users}, jsonfile)
+    user = requests.get("{}/users/{}".format(base_url, employee_id)).json()
+    todos = requests.get(
+        "{}/todos".format(base_url),
+        params={"userId": employee_id}
+    ).json()
+
+    employee_name = user.get("name")
+    done_tasks = [task for task in todos if task.get("completed")]
+
+    print("Employee {} is done with tasks({}/{}):".format(
+        employee_name, len(done_tasks), len(todos)))
+    for task in done_tasks:
+        print("\t {}".format(task.get("title")))
